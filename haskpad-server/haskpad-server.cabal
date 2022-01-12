@@ -1,0 +1,75 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.34.4.
+--
+-- see: https://github.com/sol/hpack
+
+name:           haskpad-server
+version:        0.1.0.0
+description:    Please see the README on GitHub at <https://github.com/cyoon1729/haskpad#readme>
+homepage:       https://github.com/cyoon1729/haskpad#readme
+bug-reports:    https://github.com/cyoon1729/haskpad/issues
+author:         Chris Yoon
+maintainer:     Chris Yoon
+copyright:      2022 Chris Yoon
+license:        BSD3
+license-file:   LICENSE
+build-type:     Simple
+extra-source-files:
+    README.md
+    ChangeLog.md
+
+source-repository head
+  type: git
+  location: https://github.com/cyoon1729/haskpad
+
+library
+  exposed-modules:
+      Haskpad
+      Haskpad.Optra.Commutative
+      Haskpad.Optra.Operation
+      Haskpad.Optra.Serialize
+  other-modules:
+      Paths_haskpad_server
+  hs-source-dirs:
+      src
+  build-depends:
+      aeson
+    , base >=4.7 && <5
+    , bytestring
+    , containers
+    , text
+  default-language: Haskell2010
+
+executable haskpad-server-exe
+  main-is: Main.hs
+  other-modules:
+      Paths_haskpad_server
+  hs-source-dirs:
+      app
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      aeson
+    , base >=4.7 && <5
+    , bytestring
+    , containers
+    , haskpad-server
+    , text
+  default-language: Haskell2010
+
+test-suite haskpad-server-test
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  other-modules:
+      Paths_haskpad_server
+  hs-source-dirs:
+      test
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      aeson
+    , base >=4.7 && <5
+    , bytestring
+    , containers
+    , haskpad-server
+    , text
+  default-language: Haskell2010
