@@ -26,8 +26,7 @@ import Haskpad.Optra.Operation as OP
 
 
 data OpInfo = OpInfo
-    {
-      opType   :: DT.Text
+    { opType   :: DT.Text
     , paramInt :: Int
     , paramStr :: DT.Text
     } deriving (Generic, Show)
@@ -46,8 +45,7 @@ instance ToJSON OpInfo where
 
 
 data OpSeqInfo = OpSeqInfo
-    {
-      blen      :: Int
+    { blen      :: Int
     , tlen      :: Int
     , ops       :: [DT.Text]
     }  deriving (Generic, Show)

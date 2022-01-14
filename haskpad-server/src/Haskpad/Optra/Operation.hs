@@ -15,12 +15,12 @@ import qualified Data.Foldable as DF
 import qualified Data.List as DL
 
 
-data Operation =
-    Retain Int |
-    Delete Int | 
-    Insert String |
-    NoOp |
-    ErrorOp
+data Operation
+    = Retain Int
+    | Delete Int
+    | Insert String
+    | NoOp
+    | ErrorOp
     deriving (Eq, Show)
 
 
@@ -64,12 +64,12 @@ isErrorOp ErrorOp = True
 isErrorOp _       = False
 
 
-data OperationSeq = ErrorOpSeq | OperationSeq
-  {
-    baseLen    :: Int
-  , targetLen  :: Int
-  , operations :: DS.Seq Operation
-  } deriving (Eq, Show)
+data OperationSeq = OperationSeq 
+    { baseLen    :: Int
+    , targetLen  :: Int
+    , operations :: DS.Seq Operation
+    } | ErrorOpSeq
+    deriving (Eq, Show)
 
 
 -- | Check ErrorOpSeq
