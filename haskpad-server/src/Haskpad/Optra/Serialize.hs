@@ -2,8 +2,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module Haskpad.Optra.Serialize
-  (
-    OpInfo (..)
+  ( OpInfo (..)
   , OpSeqInfo (..)
   , fromOpInfo
   , toOpInfo

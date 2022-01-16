@@ -1,6 +1,5 @@
 module Haskpad.Optra.Operation 
-    (
-      Operation (..)
+    ( Operation (..)
     , OperationSeq (..)
     , emptyOpSeq
     , addRetain

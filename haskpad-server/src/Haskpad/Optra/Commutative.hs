@@ -4,8 +4,7 @@
 -}
 
 module Haskpad.Optra.Commutative
-    (
-      compose
+    ( compose
     , transform
     ) where
 

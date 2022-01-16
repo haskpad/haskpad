@@ -4,8 +4,7 @@
 {-# LANGUAGE DuplicateRecordFields#-}
 
 module Haskpad.Backend.Session 
-    (
-      UID
+    ( UID
     , HaskpadSession (..)
     , State (..)
     , UserOperation (..)

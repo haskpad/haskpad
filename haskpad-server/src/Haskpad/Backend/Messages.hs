@@ -3,8 +3,7 @@
 
 
 module Haskpad.Backend.Messages
-    (
-      ServerMessage (..)
+    ( ServerMessage (..)
     , ClientMessage (..)
     , toHistoryMsg (..)
     ) where
