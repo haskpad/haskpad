@@ -14,44 +14,34 @@ module Haskpad.Backend.Session
     ) where
 
 
+import Control.Concurrent.STM (TVar, readTVar, writeTVar)
+import qualified Data.Text as DT
+import qualified Data.Sequence as DS
 import qualified Data.Map.Strict as DM
--- import qualified Network.WebSockets as WS
+import Data.UUID.V4 (nextRandom)
+import Data.UUID (toText)
+import qualified Network.Websockets as WS
+
 import Haskpad.Optra.Operation as OP
 
 
-type UID         = Int
-type Client      = Int -- (UID, WS.Connection)
-type ServerState = Int --DM.Map UID WS.Connection
+type UID = DT.Text
 
 
-data HaskpadSession = HaskpadSession 
-    { state         :: State
-    , count         :: Int
-    , clients       :: [Client]
-    , serverState   :: ServerState
-    , killed        :: Bool
-    }
+getUID :: IO DT.Text
+getUID = nextRandom >>= \u -> return $ toText u
 
 
-data State = State
-    { operations :: [UserOperation]
-    , text       :: String
-    , language   :: String
-    , users      :: DM.Map UID UserInfo
-    , cursors    :: DM.Map UID CursorData
-    } 
-
-
-data UserOperation = UserOperation 
-    { uid      :: UID
+data UserOperation = UserOperation
+    { userID    :: DT.Text
     , operation :: OP.OperationSeq
     }
- 
+
 
 data UserInfo = UserInfo
-    { uid  :: UID
-    , name  :: String
-    , hue   :: Int
+    { userID :: DT.Text
+    , name   :: String
+    , hue    :: Int
     }
 
 
@@ -63,5 +53,53 @@ data CursorData = CursorData
 
 data History = History 
     { start      :: Int
-    , opHistoty  :: [UserOperation]
+    , opHistoty  :: DS.Seq UserOperation
     }
+
+
+type ConnMap   = DM.Map UID WS.Connection
+type InfoMap   = DM.Map UID UserInfo
+type CursorMap = DM.Map UID CursorData
+
+
+data HaskpadSession = HaskpadSession 
+    { sessionID     :: UID
+    , state         :: State
+    , clientConns   :: TVar ConnMap
+    , clientInfos   :: TVar InfoMap
+    , killed        :: Bool
+    }
+
+
+data State = State
+    { operations :: TVar (DS.Seq UserOperation)
+    , text       :: TVar DT.Text
+    , language   :: TVar DT.Text
+    , cursors    :: TVar CursorMap
+    }
+
+
+addClientConn :: TVar ConnMap -> (UID, WS.Connection) -> STM ()
+
+
+deleteClientConn :: TVar ConnMap -> UID -> STM ()
+
+
+addClientInfo :: TVar InfoMap -> (UID, UserInfo) -> STM ()
+
+
+deleteClientInfo :: TVar InfoMap -> UID -> STM ()
+
+
+addOperation :: TVar (DS.Seq UserOperation) -> UserOperation -> STM ()
+
+
+updateText :: TVar DT.Text -> [UserOperation] -> STM ()
+
+
+updateLanguage :: TVar DT.Text -> DT.Text -> STM ()
+
+
+updateCursors :: TVar CursorMap -> (UID, CursorData) -> STM ()
+
+
