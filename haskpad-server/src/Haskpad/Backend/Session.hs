@@ -1,7 +1,8 @@
 {-
  - Implements data types representing a collaborative editing session.
 -}
-{-# LANGUAGE DuplicateRecordFields#-}
+{-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE RecordWildCards #-}
 
 module Haskpad.Backend.Session 
     ( UID
@@ -39,8 +40,7 @@ data UserOperation = UserOperation
 
 
 data UserInfo = UserInfo
-    { userID :: DT.Text
-    , name   :: String
+    { name   :: String
     , hue    :: Int
     }
 
@@ -65,41 +65,79 @@ type CursorMap = DM.Map UID CursorData
 data HaskpadSession = HaskpadSession 
     { sessionID     :: UID
     , state         :: State
-    , clientConns   :: TVar ConnMap
-    , clientInfos   :: TVar InfoMap
+    , clientConns   :: ConnMap
+    , clientInfos   :: InfoMap
     , killed        :: Bool
-    }
+    } deriving (Show)
 
 
 data State = State
-    { operations :: TVar (DS.Seq UserOperation)
-    , text       :: TVar DT.Text
-    , language   :: TVar DT.Text
-    , cursors    :: TVar CursorMap
-    }
+    { operations :: DS.Seq UserOperation
+    , text       :: DT.Text
+    , language   :: DT.Text
+    , cursors    :: CursorMap
+    } deriving (Show)
 
 
-addClientConn :: TVar ConnMap -> (UID, WS.Connection) -> STM ()
+addClientConn :: TVar HaskpadSession -> (UID, WS.Connection) -> STM ()
+addClientConn sess{..} newClient{..} = do
+    currSess <- readTVar sess
+    let (uid, conn) = newClient
+        connMap     = clientConns currSess
+        updatedMap  = DM.insert uid conn connMap
+    writeTVar sess (currSess {clientConns = updatedMap}) 
 
 
-deleteClientConn :: TVar ConnMap -> UID -> STM ()
+deleteClientConn :: TVar HaskpadSession -> UID -> STM ()
+deleteClientConn sess uid = do
+    currSess <- readTVar sess
+    let connMap    = clientConns currSess
+        updatedMap = DM.delete uid connMap
+    writeTVar sess (currSess {clientConns = updatedMap})
 
 
-addClientInfo :: TVar InfoMap -> (UID, UserInfo) -> STM ()
+addClientInfo :: TVar HaskpadSession -> (UID, UserInfo) -> STM ()
+addClientInfo sess clientInfo = do
+    currSess <- readTVar sess
+    let (uid, uinfo) = clientInfo
+        infoMap      = clientInfos sess
+        updatedMap   = DM.insert uid conn infoMap
+    writeTVar sess (currSess {clientInfos = updatedMap})
 
 
-deleteClientInfo :: TVar InfoMap -> UID -> STM ()
+deleteClientInfo :: TVar HaskpadSession -> UID -> STM ()
+    currSess <- readTVar sess
+    let infoMap    = clientInfos currSess
+        updatedMap = DM.delete uid infoMap
+    writeTVar sess (currSess {clientInfos = updatedMap})
 
 
-addOperation :: TVar (DS.Seq UserOperation) -> UserOperation -> STM ()
+addOperation :: TVar HaskpadSession -> UserOperation -> STM ()
+addOperation sess op = do
+    currSess <- readTVar sess
+    let currState    = state currSess
+        ops          = operations currState
+        updatedOps   = ops DS.|> op
+        updatedState = currState {operations = updatedOps}
+     writeTVar sess (currSess {state = updatedState})
 
 
-updateText :: TVar DT.Text -> [UserOperation] -> STM ()
+updateLanguage :: TVar HaskpadSession -> DT.Text -> STM ()
+updateLanguage sess newLang = do
+    currSess <- readTVar sess
+    let currState   = state currSess
+        updatedLang = currState {language = newLang}
+    writeTvar sess (currSess {state=updatedLang})
 
 
-updateLanguage :: TVar DT.Text -> DT.Text -> STM ()
-
-
-updateCursors :: TVar CursorMap -> (UID, CursorData) -> STM ()
+updateCursors :: TVar HaskpadSession -> (UID, CursorData) -> STM ()
+updatedLanguage sess clientCursor = do
+    currSess <- readTVar sess
+    let (uid, cursor)  = clientCursor
+        currState      = state currSess 
+        cursorMap      = cursors currState 
+        updatedCursors = DM.insert uid cursor cursorMap
+        updatedState   = currState {cursors = updatedCursors}
+    writeTVar sess (currSess {state = updatedState})
 
 
