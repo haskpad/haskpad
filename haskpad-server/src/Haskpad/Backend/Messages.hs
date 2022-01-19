@@ -5,7 +5,6 @@
 module Haskpad.Backend.Messages
     ( ServerMessage (..)
     , ClientMessage (..)
-    , toHistoryMsg (..)
     ) where
 
 
@@ -42,14 +41,14 @@ instance ToJSON ServerMessage where
     toEncoding = genericToEncoding defaultOptions
 
 
+{-
 toHistoryMsg :: BS.History -> ServerMessage
 toHistoryMsg (BS.History start userOps) = HistoryMsg start (serUserOps userOps)
   where
     serUserOps = map (\(BS.UserOperation uid ops) -> (uid, parseOps ops))
     parseOps   = DTE.decodeUtf8 . OPS.serializeOps
+-}
 
-
-toUserMsg 
 
 
 data ClientMessage 
