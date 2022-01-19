@@ -6,6 +6,7 @@ author:              "Chris Yoon"
 maintainer:          "Chris Yoon"
 copyright:           "2022 Chris Yoon"
 
+
 extra-source-files:
 - README.md
 - ChangeLog.md
@@ -21,10 +22,17 @@ description:         Please see the README on GitHub at <https://github.com/cyoo
 
 dependencies:
 - base >= 4.7 && < 5
-- containers
 - aeson
-- text
 - bytestring
+- containers
+- servant-server
+- servant-websockets
+- stm
+- text
+- uuid
+- wai
+- warp
+- websockets
 
 library:
   source-dirs: src

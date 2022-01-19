@@ -26,6 +26,9 @@ source-repository head
 library
   exposed-modules:
       Haskpad
+      Haskpad.Backend.Messages
+      Haskpad.Backend.Server
+      Haskpad.Backend.Session
       Haskpad.Optra.Commutative
       Haskpad.Optra.Operation
       Haskpad.Optra.Serialize
@@ -38,7 +41,14 @@ library
     , base >=4.7 && <5
     , bytestring
     , containers
+    , servant-server
+    , servant-websockets
+    , stm
     , text
+    , uuid
+    , wai
+    , warp
+    , websockets
   default-language: Haskell2010
 
 executable haskpad-server-exe
@@ -54,7 +64,14 @@ executable haskpad-server-exe
     , bytestring
     , containers
     , haskpad-server
+    , servant-server
+    , servant-websockets
+    , stm
     , text
+    , uuid
+    , wai
+    , warp
+    , websockets
   default-language: Haskell2010
 
 test-suite haskpad-server-test
@@ -71,5 +88,12 @@ test-suite haskpad-server-test
     , bytestring
     , containers
     , haskpad-server
+    , servant-server
+    , servant-websockets
+    , stm
     , text
+    , uuid
+    , wai
+    , warp
+    , websockets
   default-language: Haskell2010
