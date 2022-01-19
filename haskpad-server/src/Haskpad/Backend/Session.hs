@@ -7,11 +7,24 @@
 
 module Haskpad.Backend.Session 
     ( UID
-    , HaskpadSession (..)
-    , State (..)
+    , getUID
     , UserOperation (..)
     , UserInfo (..)
     , CursorData (..)
+    , SessionMap
+    , ConnMap
+    , InfoMap
+    , CursorMap 
+    , HaskpadSession (..)
+    , State (..)
+    , emptySessMap
+    , addNewSession
+    , addClientConn
+    , deleteClientConn
+    , addClientInfo
+    , deleteClientInfo
+    , addOperation
+    , printTVar
     ) where
 
 
@@ -19,22 +32,23 @@ import           Control.Concurrent.STM
 import qualified Data.Map.Strict as DM
 import qualified Data.Sequence as DS
 import qualified Data.Text as DT
+import qualified Data.Text.Lazy as TL
 import           Data.UUID.V4 (nextRandom)
 import           Data.UUID (toText)
-import qualified Network.WebSockets as WS
+import           Network.WebSockets.Connection (Connection)
 
 import Haskpad.Optra.Operation as OP
 
 
-type UID = DT.Text
+type UID = TL.Text
 
 
-getUID :: IO DT.Text
-getUID = nextRandom >>= \u -> return $ toText u
+getUID :: IO UID
+getUID = nextRandom >>= \u -> return $ (TL.fromStrict . toText) u
 
 
 data UserOperation = UserOperation
-    { userID    :: DT.Text
+    { userID    :: TL.Text
     , operation :: OP.OperationSeq
     } deriving (Show) 
 
@@ -52,7 +66,7 @@ data CursorData = CursorData
 
 
 type SessionMap = DM.Map UID (TVar HaskpadSession)
-type ConnMap    = DM.Map UID WS.Connection
+type ConnMap    = DM.Map UID Connection
 type InfoMap    = DM.Map UID UserInfo
 type CursorMap  = DM.Map UID CursorData
 
@@ -116,7 +130,7 @@ addNewSession sessMap sessId newSession = do
 
 
 -- | Add a websocket connection identified by UID to client connections.
-addClientConn :: TVar HaskpadSession -> (UID, WS.Connection) -> STM ()
+addClientConn :: TVar HaskpadSession -> (UID, Connection) -> STM ()
 addClientConn sess newClient = do
     currSess <- readTVar sess
     let (uid, conn) = newClient

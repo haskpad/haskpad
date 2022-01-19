@@ -12,8 +12,8 @@ module Haskpad.Backend.Message
 
 import           GHC.Generics (Generic)
 import           Data.Aeson
-import qualified Data.Text.Lazy as DT
-import qualified Data.Text.Lazy.Encoding as DTE 
+import qualified Data.Text.Lazy as TL
+import qualified Data.Text.Lazy.Encoding as TLE 
 import qualified Data.Foldable as DF
 
 import Haskpad.Backend.Session as BS
@@ -22,10 +22,10 @@ import Haskpad.Optra.Serialize as OPS
 
 data ServerMessage
     = IdentityMsg Int
-    | HistoryMsg Int [(Int, DT.Text)]
-    | LanguageMsg DT.Text
-    | UserInfoMsg Int DT.Text
-    | UserCursorMsg Int DT.Text
+    | HistoryMsg Int [(Int, TL.Text)]
+    | LanguageMsg TL.Text
+    | UserInfoMsg Int TL.Text
+    | UserCursorMsg Int TL.Text
     deriving (Generic)
 
 
@@ -44,19 +44,35 @@ instance ToJSON ServerMessage where
 
 
 data ClientMessage 
-    = EditMsg DT.Text Int [DT.Text]
-    | SetLanguageMsg DT.Text DT.Text
-    | ClientInfoMsg DT.Text DT.Text DT.Text
-    | CursorDataMsg DT.Text [Int] [(Int, Int)]
+    = EditMsg TL.Text TL.Text Int [TL.Text]
+    | SetLanguageMsg TL.Text TL.Text TL.Text
+    | ClientInfoMsg TL.Text TL.Text TL.Text TL.Text
+    | CursorDataMsg TL.Text TL.Text [Int] [(Int, Int)]
+    | ClientErrorMsg
     deriving (Generic) 
 
 
 instance FromJSON ClientMessage where
     parseJSON = withObject "ClientMessage" $ \v -> DF.asum
-      [ EditMsg <$> v .: "sessionID" <*> v .: "revision" <*> v .: "operations"  
-      , SetLanguageMsg <$> v .: "sessionID"  <*> v .: "set_language"
-      , ClientInfoMsg <$> v .: "sessionID" <*> v .: "name" <*> v .: "hue"
-      , CursorDataMsg <$> v .: "sessionID" <*> v .: "cursors" <*> v .: "selections" 
+      [ EditMsg
+            <$> v .: "sessId"
+            <*> v .: "uid"
+            <*> v .: "revision"
+            <*> v .: "operations"  
+      , SetLanguageMsg
+            <$> v .: "sessId"
+            <*> v .: "uid"
+            <*> v .: "set_language"
+      , ClientInfoMsg
+            <$> v .: "sessId"
+            <*> v .: "uid"
+            <*> v .: "name"
+            <*> v .: "hue"
+      , CursorDataMsg
+            <$> v .: "sessId"
+            <*> v .: "uid"
+            <*> v .: "cursors"
+            <*> v .: "selections" 
       ]
 
 
