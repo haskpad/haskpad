@@ -26,7 +26,7 @@ source-repository head
 library
   exposed-modules:
       Haskpad
-      Haskpad.Backend.Messages
+      Haskpad.Backend.Message
       Haskpad.Backend.Server
       Haskpad.Backend.Session
       Haskpad.Optra.Commutative

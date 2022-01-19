@@ -1,15 +1,17 @@
+{-
+ - Message types for Client and Server communication.
+-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-
-module Haskpad.Backend.Messages
+module Haskpad.Backend.Message
     ( ServerMessage (..)
     , ClientMessage (..)
     ) where
 
 
-import GHC.Generics (Generic)
-import Data.Aeson
+import           GHC.Generics (Generic)
+import           Data.Aeson
 import qualified Data.Text.Lazy as DT
 import qualified Data.Text.Lazy.Encoding as DTE 
 import qualified Data.Foldable as DF
@@ -41,30 +43,20 @@ instance ToJSON ServerMessage where
     toEncoding = genericToEncoding defaultOptions
 
 
-{-
-toHistoryMsg :: BS.History -> ServerMessage
-toHistoryMsg (BS.History start userOps) = HistoryMsg start (serUserOps userOps)
-  where
-    serUserOps = map (\(BS.UserOperation uid ops) -> (uid, parseOps ops))
-    parseOps   = DTE.decodeUtf8 . OPS.serializeOps
--}
-
-
-
 data ClientMessage 
-    = EditMsg Int [DT.Text]
-    | SetLanguageMsg DT.Text
-    | ClientInfoMsg DT.Text DT.Text
-    | CursorDataMsg [Int] [(Int, Int)]
+    = EditMsg DT.Text Int [DT.Text]
+    | SetLanguageMsg DT.Text DT.Text
+    | ClientInfoMsg DT.Text DT.Text DT.Text
+    | CursorDataMsg DT.Text [Int] [(Int, Int)]
     deriving (Generic) 
 
 
 instance FromJSON ClientMessage where
     parseJSON = withObject "ClientMessage" $ \v -> DF.asum
-      [ EditMsg <$> v .: "revision" <*> v .: "operations"  
-      , SetLanguageMsg <$> v .: "set_language"
-      , ClientInfoMsg <$> v .: "name" <*> v .: "hue"
-      , CursorDataMsg <$> v .: "cursors" <*> v .: "selections" 
+      [ EditMsg <$> v .: "sessionID" <*> v .: "revision" <*> v .: "operations"  
+      , SetLanguageMsg <$> v .: "sessionID"  <*> v .: "set_language"
+      , ClientInfoMsg <$> v .: "sessionID" <*> v .: "name" <*> v .: "hue"
+      , CursorDataMsg <$> v .: "sessionID" <*> v .: "cursors" <*> v .: "selections" 
       ]
 
 
@@ -72,4 +64,11 @@ instance ToJSON ClientMessage where
     toEncoding = genericToEncoding defaultOptions
 
 
+{-
+toHistoryMsg :: BS.History -> ServerMessage
+toHistoryMsg (BS.History start userOps) = HistoryMsg start (serUserOps userOps)
+  where
+    serUserOps = map (\(BS.UserOperation uid ops) -> (uid, parseOps ops))
+    parseOps   = DTE.decodeUtf8 . OPS.serializeOps
+-}
 
