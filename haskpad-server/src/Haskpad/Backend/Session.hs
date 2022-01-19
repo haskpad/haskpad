@@ -11,17 +11,16 @@ module Haskpad.Backend.Session
     , UserOperation (..)
     , UserInfo (..)
     , CursorData (..)
-    , History (..)
     ) where
 
 
-import Control.Concurrent.STM (TVar, readTVar, writeTVar)
+import Control.Concurrent.STM
 import qualified Data.Text as DT
 import qualified Data.Sequence as DS
 import qualified Data.Map.Strict as DM
 import Data.UUID.V4 (nextRandom)
 import Data.UUID (toText)
-import qualified Network.Websockets as WS
+import Network.WebSockets as WS
 
 import Haskpad.Optra.Operation as OP
 
@@ -36,25 +35,19 @@ getUID = nextRandom >>= \u -> return $ toText u
 data UserOperation = UserOperation
     { userID    :: DT.Text
     , operation :: OP.OperationSeq
-    }
+    } deriving (Show) 
 
 
 data UserInfo = UserInfo
     { name   :: String
     , hue    :: Int
-    }
+    } deriving (Show, Eq)
 
 
 data CursorData = CursorData
     { cursor     :: [Int]
     , selections :: [(Int, Int)]  
-    }
-
-
-data History = History 
-    { start      :: Int
-    , opHistoty  :: DS.Seq UserOperation
-    }
+    } deriving (Show)
 
 
 type ConnMap   = DM.Map UID WS.Connection
@@ -68,19 +61,42 @@ data HaskpadSession = HaskpadSession
     , clientConns   :: ConnMap
     , clientInfos   :: InfoMap
     , killed        :: Bool
-    } deriving (Show)
+    }
 
 
 data State = State
-    { operations :: DS.Seq UserOperation
-    , text       :: DT.Text
+    { userOps    :: DS.Seq UserOperation
     , language   :: DT.Text
     , cursors    :: CursorMap
     } deriving (Show)
 
 
+initState :: State
+initState = State initOps initLang initCursors
+  where
+    initLang    = DT.pack "txt"
+    initOps     = DS.fromList ([] :: [UserOperation])
+    initCursors = DM.empty :: CursorMap
+
+
+initSession :: UID -> STM (TVar HaskpadSession)
+initSession uid = do
+    let state = initState
+        conns = DM.empty :: ConnMap
+        infos = DM.empty :: InfoMap
+    mutSess <- newTVar (HaskpadSession uid state conns infos False)   
+    return mutSess
+
+
+createSession :: IO (TVar HaskpadSession)
+createSession = do
+    uid <- getUID
+    newSess <- atomically (initSession uid)
+    return newSess 
+
+
 addClientConn :: TVar HaskpadSession -> (UID, WS.Connection) -> STM ()
-addClientConn sess{..} newClient{..} = do
+addClientConn sess newClient = do
     currSess <- readTVar sess
     let (uid, conn) = newClient
         connMap     = clientConns currSess
@@ -100,12 +116,13 @@ addClientInfo :: TVar HaskpadSession -> (UID, UserInfo) -> STM ()
 addClientInfo sess clientInfo = do
     currSess <- readTVar sess
     let (uid, uinfo) = clientInfo
-        infoMap      = clientInfos sess
-        updatedMap   = DM.insert uid conn infoMap
+        infoMap      = clientInfos currSess
+        updatedMap   = DM.insert uid uinfo infoMap
     writeTVar sess (currSess {clientInfos = updatedMap})
 
 
 deleteClientInfo :: TVar HaskpadSession -> UID -> STM ()
+deleteClientInfo sess uid = do
     currSess <- readTVar sess
     let infoMap    = clientInfos currSess
         updatedMap = DM.delete uid infoMap
@@ -116,28 +133,15 @@ addOperation :: TVar HaskpadSession -> UserOperation -> STM ()
 addOperation sess op = do
     currSess <- readTVar sess
     let currState    = state currSess
-        ops          = operations currState
+        ops          = userOps currState
         updatedOps   = ops DS.|> op
-        updatedState = currState {operations = updatedOps}
-     writeTVar sess (currSess {state = updatedState})
-
-
-updateLanguage :: TVar HaskpadSession -> DT.Text -> STM ()
-updateLanguage sess newLang = do
-    currSess <- readTVar sess
-    let currState   = state currSess
-        updatedLang = currState {language = newLang}
-    writeTvar sess (currSess {state=updatedLang})
-
-
-updateCursors :: TVar HaskpadSession -> (UID, CursorData) -> STM ()
-updatedLanguage sess clientCursor = do
-    currSess <- readTVar sess
-    let (uid, cursor)  = clientCursor
-        currState      = state currSess 
-        cursorMap      = cursors currState 
-        updatedCursors = DM.insert uid cursor cursorMap
-        updatedState   = currState {cursors = updatedCursors}
+        updatedState = currState {userOps = updatedOps}
     writeTVar sess (currSess {state = updatedState})
 
+
+-- | Print a TVar for debugging
+printTVar :: Show a => TVar a -> IO ()  
+printTVar t = do
+    tr <- atomically $ readTVar t
+    putStrLn (show tr)
 
