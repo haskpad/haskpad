@@ -16,15 +16,20 @@ module Haskpad.Backend.Session
     , InfoMap
     , CursorMap 
     , HaskpadSession (..)
-    , State (..)
+    , Document (..)
+    , emptyDocument
     , emptySessMap
+    , createSession
     , addNewSession
     , addClientConn
     , deleteClientConn
     , addClientInfo
     , deleteClientInfo
     , addOperation
+    , updateLanguage
     , printTVar
+    , lookupSession
+    , showSession
     ) where
 
 
@@ -48,20 +53,20 @@ getUID = nextRandom >>= \u -> return $ (TL.fromStrict . toText) u
 
 
 data UserOperation = UserOperation
-    { userID    :: TL.Text
-    , operation :: OP.OperationSeq
+    { userOperationId :: UID  -- this is just the userID 
+    , userOperationOp :: OP.OperationSeq
     } deriving (Show) 
 
 
 data UserInfo = UserInfo
-    { name   :: String
-    , hue    :: Int
+    { userInfoName   :: TL.Text
+    , userInfoHue    :: TL.Text
     } deriving (Show, Eq)
 
 
 data CursorData = CursorData
-    { cursor     :: [Int]
-    , selections :: [(Int, Int)]  
+    { cursorDataCursor     :: [Int]
+    , cursorDataSelections :: [(Int, Int)]  
     } deriving (Show)
 
 
@@ -72,26 +77,26 @@ type CursorMap  = DM.Map UID CursorData
 
 
 data HaskpadSession = HaskpadSession 
-    { sessionID     :: UID
-    , state         :: State
-    , clientConns   :: ConnMap
-    , clientInfos   :: InfoMap
-    , killed        :: Bool
+    { haskpadSessionId            :: UID
+    , haskpadSessionDocument      :: Document
+    , haskpadSessionClientConns   :: ConnMap
+    , haskpadSessionClientInfos   :: InfoMap
+    , haskpadSessionKilled        :: Bool
     }
 
 
-data State = State
-    { userOps    :: DS.Seq UserOperation
-    , language   :: DT.Text
-    , cursors    :: CursorMap
+data Document = Document
+    { documentUserOps    :: DS.Seq UserOperation
+    , documentLanguage   :: TL.Text
+    , documentCursors    :: CursorMap
     } deriving (Show)
 
 
 -- | Initialize an empty state. 
-emptyState :: State
-emptyState = State initOps initLang initCursors
+emptyDocument :: Document
+emptyDocument = Document initOps initLang initCursors
   where
-    initLang    = DT.pack "txt"
+    initLang    = TL.pack "txt"
     initOps     = DS.fromList ([] :: [UserOperation])
     initCursors = DM.empty :: CursorMap
 
@@ -99,10 +104,10 @@ emptyState = State initOps initLang initCursors
 -- | Initialize an empty mutable session given the session id.
 emptySession :: UID -> STM (TVar HaskpadSession)
 emptySession uid = do
-    let state = emptyState
+    let doc   = emptyDocument
         conns = DM.empty :: ConnMap
         infos = DM.empty :: InfoMap
-    mutSess <- newTVar (HaskpadSession uid state conns infos False)   
+    mutSess <- newTVar (HaskpadSession uid doc conns infos False)   
     return mutSess
 
 
@@ -134,18 +139,18 @@ addClientConn :: TVar HaskpadSession -> (UID, Connection) -> STM ()
 addClientConn sess newClient = do
     currSess <- readTVar sess
     let (uid, conn) = newClient
-        connMap     = clientConns currSess
+        connMap     = haskpadSessionClientConns currSess
         updatedMap  = DM.insert uid conn connMap
-    writeTVar sess (currSess {clientConns = updatedMap}) 
+    writeTVar sess (currSess {haskpadSessionClientConns = updatedMap}) 
 
 
 -- | Delete a client connction from an active HaskpadSession.
 deleteClientConn :: TVar HaskpadSession -> UID -> STM ()
 deleteClientConn sess uid = do
     currSess <- readTVar sess
-    let connMap    = clientConns currSess
+    let connMap    = haskpadSessionClientConns currSess
         updatedMap = DM.delete uid connMap
-    writeTVar sess (currSess {clientConns = updatedMap})
+    writeTVar sess (currSess {haskpadSessionClientConns = updatedMap})
 
 
 -- | Add client info identified by a uid to an active HaskpadSession.
@@ -153,29 +158,38 @@ addClientInfo :: TVar HaskpadSession -> (UID, UserInfo) -> STM ()
 addClientInfo sess clientInfo = do
     currSess <- readTVar sess
     let (uid, uinfo) = clientInfo
-        infoMap      = clientInfos currSess
+        infoMap      = haskpadSessionClientInfos currSess
         updatedMap   = DM.insert uid uinfo infoMap
-    writeTVar sess (currSess {clientInfos = updatedMap})
+    writeTVar sess (currSess {haskpadSessionClientInfos = updatedMap})
 
 
 -- | Delete client info indentified by a uid to an active HaskpadSession.
 deleteClientInfo :: TVar HaskpadSession -> UID -> STM ()
 deleteClientInfo sess uid = do
     currSess <- readTVar sess
-    let infoMap    = clientInfos currSess
+    let infoMap    = haskpadSessionClientInfos currSess
         updatedMap = DM.delete uid infoMap
-    writeTVar sess (currSess {clientInfos = updatedMap})
+    writeTVar sess (currSess {haskpadSessionClientInfos = updatedMap})
 
 
 -- | Add an operation to the UserOperation sequence in an activate HaskpadSession.
 addOperation :: TVar HaskpadSession -> UserOperation -> STM ()
 addOperation sess op = do
     currSess <- readTVar sess
-    let currState    = state currSess
-        ops          = userOps currState
-        updatedOps   = ops DS.|> op
-        updatedState = currState {userOps = updatedOps}
-    writeTVar sess (currSess {state = updatedState})
+    let currDoc     = haskpadSessionDocument currSess
+        ops         = documentUserOps currDoc
+        updatedOps  = ops DS.|> op
+        updatedDoc  = currDoc {documentUserOps = updatedOps}
+    writeTVar sess (currSess {haskpadSessionDocument = updatedDoc})
+
+
+-- | Add an operation to the UserOperation sequence in an activate HaskpadSession.
+updateLanguage :: TVar HaskpadSession -> TL.Text -> STM ()
+updateLanguage sess lang = do
+    currSess <- readTVar sess
+    let currDoc    = haskpadSessionDocument currSess
+        updatedDoc = currDoc {documentLanguage = lang}
+    writeTVar sess (currSess {haskpadSessionDocument = updatedDoc})
 
 
 -- | Print a TVar for debugging
@@ -184,3 +198,23 @@ printTVar t = do
     tr <- atomically $ readTVar t
     putStrLn (show tr)
 
+
+-- | Print TVar Session because it has no instance of show.
+showSession :: TVar HaskpadSession -> IO String
+showSession sess = do
+    s <- atomically $ readTVar sess
+    let doc         = show (haskpadSessionDocument s)
+    let clientInfos = show (haskpadSessionClientInfos s)
+    return $ doc ++ "\n" ++ clientInfos
+
+
+-- | Lookup and print a session from a TVar SessionMap, for debugging.
+lookupSession :: TVar SessionMap -> TL.Text -> IO()
+lookupSession sm sid = do
+    sm' <- atomically $ readTVar sm
+    let sess = DM.lookup sid sm'
+    case sess of
+        Nothing -> putStrLn "Session not found"
+        Just s  -> do
+            st <- showSession s
+            putStrLn (st)
