@@ -5,7 +5,7 @@ A web-based collaborative code editor built with Haskell!
 ### Road map
 Here are public Kanban boards to track project progress:
 
-**Haskpad-server**:
+**Haskpad-backend**:
 [https://trello.com/b/pEjQXZWh/haskpad-backend](https://trello.com/b/FjNq3W3b/haskpad-server)
 
 **Haskpad-frontend**:
