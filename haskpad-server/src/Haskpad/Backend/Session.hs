@@ -27,6 +27,7 @@ module Haskpad.Backend.Session
     deleteClientInfo,
     addOperation,
     updateLanguage,
+    updateCursor,
     printTVar,
     lookupSession,
     showSession,
@@ -176,6 +177,16 @@ updateLanguage sess lang = do
   currSess <- readTVar sess
   let currDoc = haskpadSessionDocument currSess
       updatedDoc = currDoc {documentLanguage = lang}
+  writeTVar sess (currSess {haskpadSessionDocument = updatedDoc})
+
+-- | Update user cursor in a given session.
+updateCursor :: TVar HaskpadSession -> (UID, CursorData) -> STM ()
+updateCursor sess cursInfo = do
+  currSess <- readTVar sess
+  let (uid, curs) = cursInfo
+      currDoc = haskpadSessionDocument currSess
+      cursorMap = documentCursors currDoc
+      updatedDoc = currDoc {documentCursors = (DM.insert uid curs cursorMap)}
   writeTVar sess (currSess {haskpadSessionDocument = updatedDoc})
 
 -- | Print a TVar for debugging

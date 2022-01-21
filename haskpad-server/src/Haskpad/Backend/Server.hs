@@ -77,17 +77,25 @@ handleSetLang sessMap sid uid lang = do
   case sess of
     Nothing -> writeTVar sessMap sessions
     Just s -> do
-      updateLanguage s lang
+      BS.updateLanguage s lang
       writeTVar sessMap (DM.insert sid s sessions)
 
-handleInfo ::
+handleClientInfo ::
   TVar BS.SessionMap ->
   BS.UID ->
   BS.UID ->
   TL.Text ->
   TL.Text ->
-  IO ()
-handleInfo _ _ _ _ _ = putStrLn "to be implemented"
+  STM ()
+handleClientInfo sessMap sid uid name hue = do
+  sessions <- readTVar sessMap
+  let sess = DM.lookup sid sessions
+  case sess of
+    Nothing -> writeTVar sessMap sessions
+    Just s -> do
+      let usrInfo = (uid, BS.UserInfo name hue)
+      BS.addClientInfo s usrInfo
+      writeTVar sessMap (DM.insert sid s sessions)
 
 handleCursor ::
   TVar BS.SessionMap ->
@@ -95,5 +103,13 @@ handleCursor ::
   BS.UID ->
   [Int] ->
   [(Int, Int)] ->
-  IO ()
-handleCursor _ _ _ _ _ = putStrLn "to be implemented"
+  STM ()
+handleCursor sessMap sid uid curs sels = do
+  sessions <- readTVar sessMap
+  let sess = DM.lookup sid sessions
+  case sess of
+    Nothing -> writeTVar sessMap sessions
+    Just s -> do
+      let cursInfo = (uid, BS.CursorData curs sels)
+      BS.updateCursor s cursInfo
+      writeTVar sessMap (DM.insert sid s sessions)
