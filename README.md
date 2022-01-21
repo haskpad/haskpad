@@ -2,14 +2,14 @@
 A web-based collaborative code editor built with Haskell! 
 
 
-### RoadMap
+### Road map
 Here are public Kanban boards to track project progress:
 
 **Haskpad-server**:
-https://trello.com/b/pEjQXZWh/haskpad-server
+[https://trello.com/b/pEjQXZWh/haskpad-backend](https://trello.com/b/FjNq3W3b/haskpad-server)
 
 **Haskpad-frontend**:
-
+[https://trello.com/b/FjNq3W3b/haskpad-frontend](https://trello.com/b/FjNq3W3b/haskpad-frontend)
 
 ### Acknowledgements
 - This project was inspired by [ekzhang/rustpad](https://github.com/ekzhang/rustpad), which is a Rust-based (with a React-Typescript frontent) collaborative code editor. Many of the architectural choices I make follow those made in [ekzhang/rustpad](https://github.com/ekzhang/rustpad).
