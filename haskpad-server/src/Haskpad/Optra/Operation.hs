@@ -1,3 +1,9 @@
+{-|
+Module      : Haskpad.Optra.Operation
+Description : Operations in Operational Transform
+Copyright   : (c) 2022, Christopher Yoon
+License     : GPL-3.0
+-}
 module Haskpad.Optra.Operation
   ( Operation (..),
     OperationSeq (..),
