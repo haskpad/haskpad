@@ -1,3 +1,8 @@
+{-|
+Module      : Haskpad
+Copyright   : (c) 2022, Christopher Yoon
+License     : GPL-3.0
+-}
 module Haskpad
   ( Operation (..),
     OperationSeq (..),

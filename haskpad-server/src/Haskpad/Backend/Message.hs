@@ -1,5 +1,8 @@
-{-
- - Message types for Client and Server communication.
+{-|
+Module      : Haskpad.Backend.Message
+Description : Message types for Client and Server communication.
+Copyright   : (c) 2022, Christopher Yoon
+License     : GPL-3.0
 -}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE OverloadedStrings #-}
@@ -17,6 +20,7 @@ import qualified Data.Text.Lazy.Encoding as TLE
 import GHC.Generics (Generic)
 import Haskpad.Backend.Session as BS
 import Haskpad.Optra.Serialize as OPS
+import qualified GHCi.Message as Haskpad.Backend
 
 data ServerMessage
   = IdentityMsg Int

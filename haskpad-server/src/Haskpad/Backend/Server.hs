@@ -1,3 +1,9 @@
+{-|
+Module      : Haskpad.Backend.Server
+Description : Server logic for Haskpad Backend.
+Copyright   : (c) 2022, Christopher Yoon
+License     : GPL-3.0
+-}
 module Haskpad.Backend.Server
   ( handleSetLang,
   )

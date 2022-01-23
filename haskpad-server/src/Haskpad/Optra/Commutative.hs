@@ -1,8 +1,9 @@
-{-
- - Implementation of Commutative operations (compose & transform) for
- - Operational transform.
+{-|
+Module      : Haskpad.Optra.Commutative
+Description : Commutative operations on operations.
+Copyright   : (c) 2022, Christopher Yoon
+License     : GPL-3.0
 -}
-
 module Haskpad.Optra.Commutative
   ( compose,
     transform,

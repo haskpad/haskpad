@@ -1,6 +1,8 @@
-{-
- - Data types representing a collaborative editing session
-   and related operations.
+{-|
+Module      : Haskpad.Backend.Session
+Description : Collaborative document editing session.
+Copyright   : (c) 2022, Christopher Yoon
+License     : GPL-3.0
 -}
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE RecordWildCards #-}

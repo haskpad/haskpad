@@ -1,3 +1,9 @@
+{-|
+Module      : Haskpad.Optra.Serialize
+Description : Serialization of OperationSeq and Operations.
+Copyright   : (c) 2022, Christopher Yoon
+License     : GPL-3.0
+-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE OverloadedStrings #-}
 
