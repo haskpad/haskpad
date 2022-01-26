@@ -1,11 +1,15 @@
-import Editor from "@monaco-editor/react"
+import CodeMirror from '@uiw/react-codemirror';
+
 
 function CodeEditor() {
+
   return (
-    <Editor
-      height="90vh"
-      defaultLanguage="haskell"
-      defaultValue="// Welcome to Haskpad!"
+    <CodeMirror
+      value="// Welcome to Haskpad"
+      height="200px"
+      onChange={(value, viewUpdate) => {
+        console.log('value:', value);
+      }}
     />
   );
 };
