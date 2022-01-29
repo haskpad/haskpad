@@ -1,10 +1,13 @@
 import React from 'react';
+import {Menu} from 'semantic-ui-react';
 
-function ControlPane () {
+function ControlPanel() {
 
   return (
     <div>
-      Control Panel
+      <Menu borderless vertical fixed='left'>
+        Control Panel
+      </Menu>
     </div>
   );
 };
@@ -12,4 +15,4 @@ function ControlPane () {
 
 
 
-export default ControlPane;
+export default ControlPanel;
