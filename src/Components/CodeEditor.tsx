@@ -6,7 +6,7 @@ function CodeEditor() {
   return (
     <CodeMirror
       value="// Welcome to Haskpad"
-      height="200px"
+      height="90vh"
       onChange={(value, viewUpdate) => {
         console.log('value:', value);
       }}

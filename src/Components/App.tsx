@@ -1,6 +1,8 @@
 import React from 'react';
-import CodeEditor from './CodeEditor'
+import CodeEditor from './CodeEditor';
+import ControlPanel from './ControlPanel';
 import './App.css';
+
 
 function App() {
   return (
